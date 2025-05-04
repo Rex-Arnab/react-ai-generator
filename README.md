@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Ideator - AI-Powered Component Generator
 
-## Getting Started
+![Project Screenshot](./demo.png)
 
-First, run the development server:
+Ideator is a Next.js application that helps developers quickly generate React components using AI. Describe the component you need, and Ideator will generate the code for you, complete with preview functionality.
 
+## Features
+
+- **AI-Powered Generation**: Generate React components from natural language prompts
+- **Code Editor**: Built-in Monaco editor for real-time code editing
+- **Live Preview**: See your components render as you edit them
+- **Component Management**: Save, load, and organize your generated components
+- **Theme Support**: Light/dark mode toggle
+- **Responsive Layout**: Adjustable panels for optimal workspace
+- **Extensive UI Library**: Pre-configured with Radix UI and other popular component libraries
+
+## Technology Stack
+
+- **Framework**: Next.js 15
+- **UI**: Radix UI, Tailwind CSS
+- **Editor**: Monaco Editor
+- **Database**: MongoDB (via Mongoose)
+- **State Management**: React Hooks
+- **Form Handling**: React Hook Form
+- **Notifications**: Sonner
+- **Theming**: next-themes
+
+## Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/v0-clone.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Start the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. Describe the component you want in the prompt area
+2. Optionally specify any NPM libraries or CDNs to include
+3. Click "Generate" to create your component
+4. Edit the code directly in the built-in editor
+5. Use "Iterate" to refine your component based on new prompts
+6. Save your components for later use
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `POST /api/generate` - Generate component code
+  - Body: { prompt: string, libraries?: string, existingCode?: string }
 
-## Deploy on Vercel
+- `GET /api/components` - List saved components
+- `POST /api/components` - Save new component
+- `PUT /api/components/:id` - Update existing component
+- `DELETE /api/components/:id` - Delete component
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Roadmap
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Add component sharing functionality
+- [ ] Implement version history for components
+- [ ] Add more template examples
+- [ ] Support for additional frameworks (Vue, Svelte)
+- [ ] Component testing integration
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)

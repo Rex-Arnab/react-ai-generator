@@ -20,9 +20,10 @@ import {
   ResizablePanelGroup
 } from "@/components/ui/resizable";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import SavedComponentsList from "@/components/SavedComponentsList"; // We'll create this
+import ComponentGallery from "@/components/ComponentGallery";
 import ComponentPreview from "@/components/ComponentPreview"; // We'll create this
 import { toast } from "sonner";
+import SavedComponentsList from "@/components/SavedComponentsList";
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -212,13 +213,30 @@ export default function Home() {
 
   // --- Loading Components ---
   const loadComponent = (component) => {
-    setPrompt(component.prompt || ""); // Load original prompt if available
+    console.log("Loading component:", component.name, component._id); // Add log
+    console.log("Loading component:", component); // Add log
+    if (!component || !component.code) {
+      toast.error("Invalid component data.");
+      return;
+    }
+
+    setPrompt(component.prompt || "");
     setLibraries(component.libraries || "");
-    setCurrentCode(component.code);
-    setGeneratedCode(component.code); // Set generated code as well for consistency
     setComponentName(component.name); // Set name for potential re-save/update
     setSelectedComponentId(component._id);
-    setPreviewKey((prev) => prev + 1); // Refresh preview
+
+    // CRITICAL: Update the code state that the editor and preview depend on
+    setCurrentCode(component.code);
+    // Setting generatedCode might be redundant if currentCode drives everything,
+    // but let's keep it for safety unless proven otherwise.
+    setGeneratedCode(component.code);
+
+    // CRITICAL: Force the preview to re-render with the new code
+    // Ensure ComponentPreview uses this key: <ComponentPreview key={previewKey} ... />
+    setPreviewKey((prev) => prev + 1);
+
+    console.log("Forcing preview refresh with key:", previewKey + 1); // Add log
+
     toast.info(`Loaded component: ${component.name}`);
   };
 
@@ -279,7 +297,7 @@ export default function Home() {
     <div className="flex flex-col h-screen">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b">
-        <h1 className="text-xl font-semibold">V0 Clone</h1>
+        <h1 className="text-xl font-semibold">Ideator</h1>
         <div className="flex items-center gap-4">
           <SavedComponentsList
             components={savedComponents}

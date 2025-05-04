@@ -9,7 +9,7 @@ export async function GET(request) {
     try {
         const components = await Component.find({})
             .sort({ updatedAt: -1 }) // Sort by most recently updated
-            .select('name _id prompt libraries updatedAt createdAt'); // Select only needed fields for list view
+            .select('name _id prompt code libraries updatedAt createdAt'); // Select only needed fields for list view
         return NextResponse.json({ success: true, data: components });
     } catch (error) {
         console.error("API GET Error:", error);

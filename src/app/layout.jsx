@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "V0 Clone",
+  title: "React Generator",
   description: "Generate React Components with AI"
 };
 
