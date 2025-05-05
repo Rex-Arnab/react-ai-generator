@@ -20,6 +20,7 @@ import {
   ResizablePanelGroup
 } from "@/components/ui/resizable";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import ComponentGallery from "@/components/ComponentGallery";
 import ComponentPreview from "@/components/ComponentPreview"; // We'll create this
 import { toast } from "sonner";
@@ -44,6 +45,8 @@ export default function Home() {
   const [componentName, setComponentName] = useState(""); // For saving
   const [previewKey, setPreviewKey] = useState(0); // To force preview refresh
   const [isDarkMode, setIsDarkMode] = useState(false); // Track theme
+  const [aiModel, setAiModel] = useState("openai/gpt-4.1-nano");
+  const [apiKey, setApiKey] = useState("");
 
   // --- Theme Detection ---
   useEffect(() => {
@@ -102,7 +105,9 @@ export default function Home() {
       prompt: prompt,
       libraries: libraries,
       // Send current editor code ONLY if iterating
-      existingCode: iteration ? currentCode : null
+      existingCode: iteration ? currentCode : null,
+      model: aiModel,
+      apiKey: apiKey
     };
 
     try {
@@ -304,6 +309,12 @@ export default function Home() {
             onLoad={loadComponent}
             onDelete={deleteComponent}
           />
+          <SettingsDialog
+            model={aiModel}
+            onModelChange={setAiModel}
+            apiKey={apiKey}
+            onApiKeyChange={setApiKey}
+          />
           <ThemeToggle />
         </div>
       </header>
@@ -375,6 +386,7 @@ export default function Home() {
                   value={componentName}
                   onChange={(e) => setComponentName(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="off"
                 />
               </CardContent>
               <CardFooter>

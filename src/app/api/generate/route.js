@@ -45,8 +45,8 @@ Generate the React component code below, ensuring the main function is named 'Co
 
 
 export async function POST(request) {
-    const { prompt, libraries, existingCode } = await request.json();
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const { prompt, libraries, existingCode, model, apiKey: userApiKey } = await request.json();
+    const apiKey = userApiKey || process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
         return NextResponse.json({ success: false, error: 'OpenRouter API key not configured' }, { status: 500 });
@@ -61,15 +61,8 @@ export async function POST(request) {
 
     const fullPrompt = createPrompt(prompt, libraries, existingCode);
 
-    // --- Choose an OpenRouter Model ---
-    // List: https://openrouter.ai/docs#models
-    // Consider models good at code generation, e.g.,
-    // - claude-3-opus, claude-3-sonnet, claude-3-haiku (Anthropic)
-    // - gpt-4-turbo, gpt-4o (OpenAI)
-    // - codellama/codellama-70b-instruct (Meta)
-    // Start with a faster/cheaper one for testing, like Haiku or Sonnet.
-    const model = "openai/gpt-4.1-nano";
-    // const model = "openai/gpt-4o"; // Example alternative
+    // Use the selected model from frontend or default to gpt-4.1-nano
+    const selectedModel = model || "deepseek/deepseek-chat-v3-0324:free";
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -79,7 +72,7 @@ export async function POST(request) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: model,
+                model: selectedModel,
                 messages: [
                     // Optional System Message (redundant if included in user prompt carefully)
                     // { "role": "system", "content": "You are a React component generator." },
