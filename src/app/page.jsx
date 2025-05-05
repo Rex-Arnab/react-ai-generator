@@ -45,7 +45,7 @@ export default function Home() {
   const [componentName, setComponentName] = useState(""); // For saving
   const [previewKey, setPreviewKey] = useState(0); // To force preview refresh
   const [isDarkMode, setIsDarkMode] = useState(false); // Track theme
-  const [aiModel, setAiModel] = useState("openai/gpt-4.1-nano");
+  const [aiModel, setAiModel] = useState("deepseek/deepseek-chat-v3-0324:free");
   const [apiKey, setApiKey] = useState("");
 
   // --- Theme Detection ---
@@ -299,11 +299,11 @@ export default function Home() {
   // }, [currentCode]);
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="flex items-center justify-between p-4 border-b">
+    <div className="flex flex-col h-[100dvh] overflow-hidden">
+      {/* Header - Stack on small screens */}
+      <header className="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-2 sm:gap-4">
         <h1 className="text-xl font-semibold">Ideator</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-normal">
           <SavedComponentsList
             components={savedComponents}
             onLoad={loadComponent}
@@ -315,6 +315,20 @@ export default function Home() {
             apiKey={apiKey}
             onApiKeyChange={setApiKey}
           />
+          {/* Mobile toggle for left panel */}
+          <div className="md:hidden p-2 border-b">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                document
+                  .querySelector(".mobile-left-panel")
+                  .classList.toggle("hidden")
+              }>
+              Toggle Settings
+            </Button>
+          </div>
+
           <ThemeToggle />
         </div>
       </header>
@@ -323,9 +337,12 @@ export default function Home() {
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-grow border-b">
-        {/* Left Panel: Input & Settings */}
-        <ResizablePanel defaultSize={25} minSize={20}>
-          <div className="flex flex-col h-full p-4 space-y-4">
+        {/* Left Panel: Input & Settings - Stack vertically on mobile */}
+        <ResizablePanel
+          defaultSize={25}
+          minSize={20}
+          className="hidden md:block">
+          <div className="flex flex-col h-full p-4 space-y-4 overflow-auto">
             <Card className="flex-grow flex flex-col">
               <CardHeader>
                 <CardTitle>Prompt</CardTitle>
@@ -410,13 +427,75 @@ export default function Home() {
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
+        {/* Mobile left panel - scrollable with max height */}
+        <div className="mobile-left-panel hidden md:hidden p-4 border-b space-y-4 overflow-y-auto max-h-[60vh]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prompt</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="Describe component..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="min-h-[100px]"
+                disabled={isLoading}
+              />
+              <Input
+                placeholder="Libraries (optional)"
+                value={libraries}
+                onChange={(e) => setLibraries(e.target.value)}
+                disabled={isLoading}
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleGenerate(false)}
+                  disabled={isLoading}
+                  className="flex-1">
+                  {isLoading ? "Generating..." : "Generate"}
+                </Button>
+                <Button
+                  onClick={() => handleGenerate(true)}
+                  disabled={isLoading || !currentCode}
+                  variant="outline"
+                  className="flex-1">
+                  {isLoading ? "Iterating..." : "Iterate"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Right Panel: Editor & Preview */}
-        <ResizablePanel defaultSize={75} minSize={30}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Save Component</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Input
+                placeholder="Component name"
+                value={componentName}
+                onChange={(e) => setComponentName(e.target.value)}
+                disabled={isLoading}
+              />
+              <Button
+                onClick={handleSave}
+                disabled={isLoading || !currentCode || !componentName.trim()}
+                className="w-full">
+                {selectedComponentId ? "Update" : "Save"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <ResizableHandle withHandle className="hidden md:block" />
+
+        {/* Right Panel: Editor & Preview - Full width on mobile */}
+        <ResizablePanel defaultSize={75} minSize={30} className="w-full">
           <ResizablePanelGroup direction="vertical" className="h-full">
-            {/* Code Editor */}
-            <ResizablePanel defaultSize={50} minSize={20}>
+            {/* Code Editor - Smaller on mobile */}
+            <ResizablePanel
+              defaultSize={50}
+              minSize={20}
+              className="min-h-[200px]">
               <div className="h-full w-full relative">
                 <MonacoEditor
                   height="100%" // Use 100% of the panel height
@@ -436,10 +515,13 @@ export default function Home() {
               </div>
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            <ResizableHandle withHandle className="hidden sm:block" />
 
-            {/* Component Preview */}
-            <ResizablePanel defaultSize={50} minSize={20}>
+            {/* Component Preview - Larger on mobile */}
+            <ResizablePanel
+              defaultSize={50}
+              minSize={20}
+              className="min-h-[300px] sm:min-h-0">
               <div className="flex flex-col h-full">
                 <div className="p-2 border-b font-medium text-sm">Preview</div>
                 <div className="flex-grow p-4 bg-muted/40 relative overflow-auto">
