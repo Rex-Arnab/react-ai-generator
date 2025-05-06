@@ -1,19 +1,6 @@
-// app/page.js
-"use client"; // This page needs client-side interactivity
+"use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic"; // For loading Monaco Editor dynamically
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter
-} from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -21,32 +8,55 @@ import {
 } from "@/components/ui/resizable";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import ComponentGallery from "@/components/ComponentGallery";
-import ComponentPreview from "@/components/ComponentPreview"; // We'll create this
-import { toast } from "sonner";
 import SavedComponentsList from "@/components/SavedComponentsList";
-
-// Dynamically import Monaco Editor to avoid SSR issues
-const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false
-});
+import ComponentPreview from "@/components/ComponentPreview";
+import useComponentAPI from "@/hooks/useComponentAPI";
+import PromptForm from "@/components/PromptForm";
+import SaveComponentForm from "@/components/SaveComponentForm";
+import CodeEditorPanel from "@/components/CodeEditorPanel";
+import MobileControls from "@/components/MobileControls";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
-  const [libraries, setLibraries] = useState(""); // For npm/cdn input
-  const [generatedCode, setGeneratedCode] = useState(
+  const [libraries, setLibraries] = useState("");
+  const [currentCode, setCurrentCode] = useState(
     " // Your component code will appear here"
   );
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentCode, setCurrentCode] = useState(generatedCode); // Code currently in the editor
   const [savedComponents, setSavedComponents] = useState([]);
-  const [selectedComponentId, setSelectedComponentId] = useState(null); // Track loaded component
-  const [componentName, setComponentName] = useState(""); // For saving
-  const [previewKey, setPreviewKey] = useState(0); // To force preview refresh
-  const [isDarkMode, setIsDarkMode] = useState(false); // Track theme
+  const [selectedComponentId, setSelectedComponentId] = useState(null);
+  const [componentName, setComponentName] = useState("");
+  const [previewKey, setPreviewKey] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [aiModel, setAiModel] = useState("deepseek/deepseek-chat-v3-0324:free");
   const [apiKey, setApiKey] = useState("");
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+
+    // Create preview for images
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => setFilePreview(e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const {
+    isLoading,
+    error,
+    fetchSavedComponents,
+    generateComponent,
+    saveComponent,
+    deleteComponent
+  } = useComponentAPI();
 
   // --- Theme Detection ---
   useEffect(() => {
@@ -67,221 +77,85 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  // --- Fetch Saved Components ---
-  const fetchSavedComponents = useCallback(async () => {
-    try {
-      const response = await fetch("/api/components");
-      if (!response.ok) throw new Error("Failed to fetch components");
-      const data = await response.json();
-      if (data.success) {
-        setSavedComponents(data.data);
-      } else {
-        throw new Error(data.error || "Failed to fetch components");
-      }
-    } catch (err) {
-      toast.error("Error fetching components");
-    }
+  // Load saved components
+  useEffect(() => {
+    const loadComponents = async () => {
+      const components = await fetchSavedComponents();
+      setSavedComponents(components);
+    };
+    loadComponents();
   }, []);
 
-  useEffect(() => {
-    fetchSavedComponents();
-  }, [fetchSavedComponents]);
-
-  // --- Code Generation ---
   const handleGenerate = async (iteration = false) => {
-    if (!prompt && !iteration) {
-      toast.info("Prompt is empty");
-      return;
-    }
-    if (iteration && !currentCode) {
-      toast.info("No code to iterate on");
+    if ((!prompt && !iteration) || (iteration && !currentCode)) {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
-    const requestBody = {
-      prompt: prompt,
-      libraries: libraries,
-      // Send current editor code ONLY if iterating
+    const code = await generateComponent({
+      prompt,
+      libraries,
       existingCode: iteration ? currentCode : null,
       model: aiModel,
-      apiKey: apiKey
-    };
+      apiKey,
+      file: uploadedFile
+    });
 
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody)
-      });
+    // Clear file after generation
+    setUploadedFile(null);
+    setFilePreview(null);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || `Request failed with status ${response.status}`
-        );
-      }
-
-      if (data.success) {
-        const formattedCode = data.code; // Assume API returns formatted code
-        setGeneratedCode(formattedCode);
-        setCurrentCode(formattedCode); // Update editor as well
-        setPreviewKey((prev) => prev + 1); // Refresh preview
-        toast.success(
-          iteration
-            ? "Component updated based on your prompt."
-            : "New component generated successfully."
-        );
-      } else {
-        throw new Error(data.error || "Failed to generate component");
-      }
-    } catch (err) {
-      console.error("Generation error:", err);
-      setError(err.message);
-      toast.error("Generation Failed: " + err.message);
-    } finally {
-      setIsLoading(false);
+    if (code) {
+      setCurrentCode(code);
+      setPreviewKey((prev) => prev + 1);
     }
   };
 
-  // --- Saving Components ---
   const handleSave = async () => {
-    if (
-      !currentCode ||
-      currentCode.trim() === "" ||
-      currentCode.startsWith(" //")
-    ) {
-      toast.error("Cannot Save: No code to save.");
-      return;
-    }
-    if (!componentName.trim()) {
-      toast.error("Cannot Save: Please provide a name for the component.");
-      return;
-    }
-
-    setIsLoading(true);
-    const payload = {
+    const saved = await saveComponent({
+      id: selectedComponentId,
       name: componentName,
       code: currentCode,
-      prompt: prompt, // Save the last prompt used
-      libraries: libraries
-    };
+      prompt,
+      libraries
+    });
 
-    try {
-      let response;
-      let method = "POST";
-      let url = "/api/components";
-
-      // If a component was loaded, update it (PUT) instead of creating (POST)
-      if (selectedComponentId) {
-        method = "PUT";
-        url = `/api/components/${selectedComponentId}`;
-      }
-
-      response = await fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-            `Failed to ${method === "PUT" ? "update" : "save"} component`
-        );
-      }
-
-      if (data.success) {
-        toast.info(
-          `Component "${data.data.name}" ${
-            method === "PUT" ? "updated" : "saved"
-          } successfully.`
-        );
-        setComponentName(""); // Clear name input
-        setSelectedComponentId(data.data._id); // Update ID in case it was a new save
-        fetchSavedComponents(); // Refresh the list
-      } else {
-        throw new Error(data.error || "Failed to save component");
-      }
-    } catch (err) {
-      console.error("Save error:", err);
-      toast.error("Save Failed: " + err.message);
-    } finally {
-      setIsLoading(false);
+    if (saved) {
+      setComponentName("");
+      setSelectedComponentId(saved._id);
+      const components = await fetchSavedComponents();
+      setSavedComponents(components);
     }
   };
 
-  // --- Loading Components ---
   const loadComponent = (component) => {
-    console.log("Loading component:", component.name, component._id); // Add log
-    console.log("Loading component:", component); // Add log
-    if (!component || !component.code) {
-      toast.error("Invalid component data.");
-      return;
-    }
+    if (!component?.code) return;
 
     setPrompt(component.prompt || "");
     setLibraries(component.libraries || "");
-    setComponentName(component.name); // Set name for potential re-save/update
+    setComponentName(component.name);
     setSelectedComponentId(component._id);
-
-    // CRITICAL: Update the code state that the editor and preview depend on
     setCurrentCode(component.code);
-    // Setting generatedCode might be redundant if currentCode drives everything,
-    // but let's keep it for safety unless proven otherwise.
-    setGeneratedCode(component.code);
-
-    // CRITICAL: Force the preview to re-render with the new code
-    // Ensure ComponentPreview uses this key: <ComponentPreview key={previewKey} ... />
     setPreviewKey((prev) => prev + 1);
-
-    console.log("Forcing preview refresh with key:", previewKey + 1); // Add log
-
-    toast.info(`Loaded component: ${component.name}`);
   };
 
-  // --- Deleting Components ---
-  const deleteComponent = async (id) => {
-    if (!id) return;
-    if (!confirm("Are you sure you want to delete this component?")) return; // Simple confirmation
+  const handleDelete = async (id) => {
+    if (!id || !confirm("Are you sure you want to delete this component?")) {
+      return;
+    }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/components/${id}`, {
-        method: "DELETE"
-      });
-      const data = await response.json();
+    const success = await deleteComponent(id);
+    if (success) {
+      const components = await fetchSavedComponents();
+      setSavedComponents(components);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete component");
+      if (selectedComponentId === id) {
+        setPrompt("");
+        setLibraries("");
+        setCurrentCode(" // Select or generate a component");
+        setComponentName("");
+        setSelectedComponentId(null);
+        setPreviewKey((prev) => prev + 1);
       }
-
-      if (data.success) {
-        toast.success("Component deleted successfully");
-        fetchSavedComponents(); // Refresh list
-        // If the deleted component was the currently loaded one, clear the editor
-        if (selectedComponentId === id) {
-          setPrompt("");
-          setLibraries("");
-          setCurrentCode(" // Select or generate a component");
-          setGeneratedCode(" // Select or generate a component");
-          setComponentName("");
-          setSelectedComponentId(null);
-          setPreviewKey((prev) => prev + 1);
-        }
-      } else {
-        throw new Error(data.error || "Failed to delete component");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Delete Failed: " + err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -307,7 +181,7 @@ export default function Home() {
           <SavedComponentsList
             components={savedComponents}
             onLoad={loadComponent}
-            onDelete={deleteComponent}
+            onDelete={handleDelete}
           />
           <SettingsDialog
             model={aiModel}
@@ -343,148 +217,46 @@ export default function Home() {
           minSize={20}
           className="hidden md:block">
           <div className="flex flex-col h-full p-4 space-y-4 overflow-auto">
-            <Card className="flex-grow flex flex-col">
-              <CardHeader>
-                <CardTitle>Prompt</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col space-y-4">
-                <div className="flex-grow">
-                  <Label htmlFor="prompt-input">
-                    Describe the component you want:
-                  </Label>
-                  <Textarea
-                    id="prompt-input"
-                    placeholder="e.g., A button that increments a counter on click, styled with primary colors."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    className="h-48 resize-none mt-1" // Increased initial height
-                    disabled={isLoading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="libs-input">
-                    NPM Libraries / CDNs (optional):
-                  </Label>
-                  <Input
-                    id="libs-input"
-                    placeholder="e.g., react-icons, https://cdn.skypack.dev/canvas-confetti"
-                    value={libraries}
-                    onChange={(e) => setLibraries(e.target.value)}
-                    className="mt-1"
-                    disabled={isLoading}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2 justify-end">
-                <Button
-                  onClick={() => handleGenerate(true)}
-                  disabled={
-                    isLoading || !currentCode || currentCode.startsWith(" //")
-                  }
-                  variant="outline">
-                  {isLoading ? "Iterating..." : "Iterate"}
-                </Button>
-                <Button
-                  onClick={() => handleGenerate(false)}
-                  disabled={isLoading}>
-                  {isLoading ? "Generating..." : "Generate"}
-                </Button>
-              </CardFooter>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Save Component</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Label htmlFor="component-name">Component Name:</Label>
-                <Input
-                  id="component-name"
-                  placeholder="e.g., counter-button"
-                  value={componentName}
-                  onChange={(e) => setComponentName(e.target.value)}
-                  disabled={isLoading}
-                  autoComplete="off"
-                />
-              </CardContent>
-              <CardFooter>
-                <Button
-                  onClick={handleSave}
-                  disabled={
-                    isLoading ||
-                    !currentCode ||
-                    currentCode.startsWith(" //") ||
-                    !componentName.trim()
-                  }
-                  className="w-full">
-                  {isLoading
-                    ? "Saving..."
-                    : selectedComponentId
-                    ? "Update Saved Component"
-                    : "Save New Component"}
-                </Button>
-              </CardFooter>
-            </Card>
+            <PromptForm
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              libraries={libraries}
+              onLibrariesChange={setLibraries}
+              isLoading={isLoading}
+              currentCode={currentCode}
+              onGenerate={() => handleGenerate(false)}
+              onIterate={() => handleGenerate(true)}
+              onFileUpload={handleFileUpload}
+              filePreview={filePreview}
+            />
+            <SaveComponentForm
+              componentName={componentName}
+              onNameChange={setComponentName}
+              isLoading={isLoading}
+              currentCode={currentCode}
+              selectedComponentId={selectedComponentId}
+              onSave={handleSave}
+            />
           </div>
         </ResizablePanel>
 
         {/* Mobile left panel - scrollable with max height */}
-        <div className="mobile-left-panel hidden md:hidden p-4 border-b space-y-4 overflow-y-auto max-h-[60vh]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Prompt</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                placeholder="Describe component..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[100px]"
-                disabled={isLoading}
-              />
-              <Input
-                placeholder="Libraries (optional)"
-                value={libraries}
-                onChange={(e) => setLibraries(e.target.value)}
-                disabled={isLoading}
-              />
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleGenerate(false)}
-                  disabled={isLoading}
-                  className="flex-1">
-                  {isLoading ? "Generating..." : "Generate"}
-                </Button>
-                <Button
-                  onClick={() => handleGenerate(true)}
-                  disabled={isLoading || !currentCode}
-                  variant="outline"
-                  className="flex-1">
-                  {isLoading ? "Iterating..." : "Iterate"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Save Component</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Input
-                placeholder="Component name"
-                value={componentName}
-                onChange={(e) => setComponentName(e.target.value)}
-                disabled={isLoading}
-              />
-              <Button
-                onClick={handleSave}
-                disabled={isLoading || !currentCode || !componentName.trim()}
-                className="w-full">
-                {selectedComponentId ? "Update" : "Save"}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <MobileControls
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          libraries={libraries}
+          onLibrariesChange={setLibraries}
+          componentName={componentName}
+          onNameChange={setComponentName}
+          isLoading={isLoading}
+          currentCode={currentCode}
+          selectedComponentId={selectedComponentId}
+          onGenerate={() => handleGenerate(false)}
+          onIterate={() => handleGenerate(true)}
+          onSave={handleSave}
+          onFileUpload={handleFileUpload}
+          filePreview={filePreview}
+        />
 
         <ResizableHandle withHandle className="hidden md:block" />
 
@@ -496,23 +268,11 @@ export default function Home() {
               defaultSize={50}
               minSize={20}
               className="min-h-[200px]">
-              <div className="h-full w-full relative">
-                <MonacoEditor
-                  height="100%" // Use 100% of the panel height
-                  language="javascript" // Use javascript, JSX is supported
-                  theme={isDarkMode ? "vs-dark" : "vs-light"} // Sync with theme
-                  value={currentCode}
-                  onChange={handleEditorChange}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    wordWrap: "on",
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true // Important for resizable panels
-                  }}
-                  // Consider adding loading state for editor itself
-                />
-              </div>
+              <CodeEditorPanel
+                currentCode={currentCode}
+                isDarkMode={isDarkMode}
+                onEditorChange={handleEditorChange}
+              />
             </ResizablePanel>
 
             <ResizableHandle withHandle className="hidden sm:block" />
