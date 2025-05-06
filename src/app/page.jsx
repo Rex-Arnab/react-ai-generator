@@ -323,7 +323,11 @@ export default function Home() {
                     <span className="font-medium text-sm">Preview</span>
                   </div>
                   <div className="flex-grow p-4 bg-slate-200 relative overflow-auto">
-                    <ComponentPreview key={previewKey} code={currentCode} />
+                    <ComponentPreview
+                      key={previewKey}
+                      code={currentCode}
+                      showDeviceControls={false}
+                    />
                   </div>
                 </div>
               </ResizablePanel>

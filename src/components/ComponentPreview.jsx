@@ -129,7 +129,7 @@ const createIframeContent = (theme) => `
 </html>
 `;
 
-export default function ComponentPreview({ code }) {
+export default function ComponentPreview({ code, showDeviceControls = true }) {
   const iframeRef = useRef(null);
   const { resolvedTheme } = useTheme();
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
@@ -192,27 +192,32 @@ export default function ComponentPreview({ code }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex gap-2 p-2 border-b">
-        <Button
-          variant={deviceSize === "mobile" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setDeviceSize("mobile")}>
-          Mobile
-        </Button>
-        <Button
-          variant={deviceSize === "tablet" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setDeviceSize("tablet")}>
-          Tablet
-        </Button>
-        <Button
-          variant={deviceSize === "desktop" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setDeviceSize("desktop")}>
-          Desktop
-        </Button>
-      </div>
-      <div className="flex-grow overflow-auto flex justify-center p-4">
+      {showDeviceControls && (
+        <div className="flex gap-2 p-2 border-b">
+          <Button
+            variant={deviceSize === "mobile" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDeviceSize("mobile")}>
+            Mobile
+          </Button>
+          <Button
+            variant={deviceSize === "tablet" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDeviceSize("tablet")}>
+            Tablet
+          </Button>
+          <Button
+            variant={deviceSize === "desktop" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDeviceSize("desktop")}>
+            Desktop
+          </Button>
+        </div>
+      )}
+      <div
+        className={`flex-grow overflow-auto flex ${
+          showDeviceControls ? "justify-center p-4" : ""
+        }`}>
         <div
           className="border rounded-lg overflow-hidden shadow-lg"
           style={{
