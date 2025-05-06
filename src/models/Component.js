@@ -34,7 +34,7 @@ const ComponentSchema = new mongoose.Schema({
 });
 
 // Ensure unique names if needed, but careful with updates
-// ComponentSchema.index({ name: 1 }, { unique: true });
+ComponentSchema.index({ name: 1 }, { unique: true });
 
 // Prevent model recompilation in Next.js dev environment
 export default mongoose.models.Component || mongoose.model('Component', ComponentSchema);
