@@ -1,8 +1,9 @@
 // components/ComponentPreview.js
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react"; // Added useMemo
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 
 // Base HTML structure for the iframe (keep this function the same)
 const createIframeContent = (theme) => `
@@ -132,10 +133,17 @@ export default function ComponentPreview({ code }) {
   const iframeRef = useRef(null);
   const { resolvedTheme } = useTheme();
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const [deviceSize, setDeviceSize] = useState("desktop");
+
+  const deviceSizes = {
+    mobile: { width: "375px", height: "667px" },
+    tablet: { width: "768px", height: "1024px" },
+    desktop: { width: "100%", height: "100%" }
+  };
 
   // Memoize the iframe content string generation
   const iframeContent = useMemo(() => {
-    console.log("Parent: Generating iframe content for theme:", resolvedTheme); // Debug
+    console.log("Parent: Generating iframe content for theme:", resolvedTheme);
     return createIframeContent(resolvedTheme);
   }, [resolvedTheme]);
 
@@ -183,14 +191,44 @@ export default function ComponentPreview({ code }) {
   }, [code, resolvedTheme, isIframeLoaded]); // Depend on code, theme, AND loaded state
 
   return (
-    <iframe
-      ref={iframeRef}
-      title="Component Preview"
-      sandbox="allow-scripts allow-same-origin" // allow-same-origin is needed for easy postMessage without origin config
-      width="100%"
-      height="100%"
-      style={{ border: "none", backgroundColor: "transparent" }}
-      // srcDoc is now set via useEffect
-    />
+    <div className="flex flex-col h-full">
+      <div className="flex gap-2 p-2 border-b">
+        <Button
+          variant={deviceSize === "mobile" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDeviceSize("mobile")}>
+          Mobile
+        </Button>
+        <Button
+          variant={deviceSize === "tablet" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDeviceSize("tablet")}>
+          Tablet
+        </Button>
+        <Button
+          variant={deviceSize === "desktop" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDeviceSize("desktop")}>
+          Desktop
+        </Button>
+      </div>
+      <div className="flex-grow overflow-auto flex justify-center p-4">
+        <div
+          className="border rounded-lg overflow-hidden shadow-lg"
+          style={{
+            width: deviceSizes[deviceSize].width,
+            height: deviceSizes[deviceSize].height
+          }}>
+          <iframe
+            ref={iframeRef}
+            title="Component Preview"
+            sandbox="allow-scripts allow-same-origin"
+            width="100%"
+            height="100%"
+            style={{ border: "none", backgroundColor: "transparent" }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
