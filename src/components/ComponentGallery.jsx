@@ -3,6 +3,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import ComponentPreview from "@/components/ComponentPreview";
 import {
   Card,
   CardContent,
@@ -59,6 +60,9 @@ export default function ComponentGallery({
                   <CardHeader className="p-3">
                     <CardTitle className="text-base">{comp.name}</CardTitle>
                   </CardHeader>
+                  <CardContent className="p-0 h-40">
+                    <ComponentPreview code={comp.code} />
+                  </CardContent>
                   <CardFooter className="flex justify-end gap-2 p-3 border-t">
                     <Button
                       variant="outline"
