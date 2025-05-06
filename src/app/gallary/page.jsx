@@ -93,8 +93,8 @@ function Gallery() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 w-full min-h-screen p-4">
-      <div className="w-full md:w-1/3">
+    <div className="flex flex-col md:flex-row gap-4 w-full h-[calc(100vh-2rem)] p-4">
+      <div className="w-full md:w-1/4 h-full overflow-hidden flex flex-col">
         <ComponentGallery
           components={savedComponents}
           onLoad={(comp) => {
@@ -106,7 +106,7 @@ function Gallery() {
         />
       </div>
       {currentComponent && (
-        <div className="w-full md:w-2/3 flex flex-col gap-2">
+        <div className="w-full md:w-3/4 h-full flex flex-col gap-2 overflow-hidden">
           <div className="flex border-b">
             <button
               className={`px-4 py-2 font-medium ${

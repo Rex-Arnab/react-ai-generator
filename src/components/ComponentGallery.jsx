@@ -37,18 +37,12 @@ export default function ComponentGallery({
 
   return (
     <Card className="flex flex-col h-full">
-      {" "}
-      {/* Make card fill height */}
-      <CardHeader>
-        <CardTitle>Component Gallery</CardTitle>
-        <CardDescription>Load or delete saved components.</CardDescription>
+      <CardHeader className="p-2">
+        <CardTitle className="text-sm">Component Gallery</CardTitle>
+        <CardDescription className="text-xs">Saved components</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow p-0">
-        {" "}
-        {/* Remove padding, ScrollArea handles it */}
-        <ScrollArea className="min-h-[300px] p-4">
-          {" "}
-          {/* Set fixed height or use flex-grow */}
+      <CardContent className="flex-grow p-0 overflow-hidden">
+        <ScrollArea className="h-full p-2">
           {components.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No saved components found.
@@ -56,14 +50,14 @@ export default function ComponentGallery({
           ) : (
             <div className="space-y-3">
               {components.map((comp) => (
-                <Card key={comp._id} className="shadow-sm">
-                  <CardHeader className="p-3">
-                    <CardTitle className="text-base">{comp.name}</CardTitle>
+                <Card key={comp._id} className="shadow-sm h-64">
+                  <CardHeader className="p-2">
+                    <CardTitle className="text-sm">{comp.name}</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0 h-40">
+                  <CardContent className="p-0 h-32">
                     <ComponentPreview code={comp.code} />
                   </CardContent>
-                  <CardFooter className="flex justify-end gap-2 p-3 border-t">
+                  <CardFooter className="flex justify-end gap-2 p-2 border-t">
                     <Button
                       variant="outline"
                       size="sm"
