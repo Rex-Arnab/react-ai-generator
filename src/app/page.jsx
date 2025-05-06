@@ -16,6 +16,7 @@ import SaveComponentForm from "@/components/SaveComponentForm";
 import CodeEditorPanel from "@/components/CodeEditorPanel";
 import MobileControls from "@/components/MobileControls";
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -32,6 +33,7 @@ export default function Home() {
   const [apiKey, setApiKey] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [viewMode, setViewMode] = useState("both"); // 'code', 'preview', or 'both'
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -105,8 +107,8 @@ export default function Home() {
     setFilePreview(null);
 
     if (code) {
-      setCurrentCode(code);
       setPreviewKey((prev) => prev + 1);
+      setCurrentCode(code);
     }
   };
 
@@ -203,6 +205,32 @@ export default function Home() {
             </Button>
           </div>
 
+          <div className="flex gap-1">
+            <Toggle
+              pressed={viewMode === "code" || viewMode === "both"}
+              onPressedChange={(pressed) =>
+                setViewMode(
+                  pressed
+                    ? viewMode === "preview"
+                      ? "both"
+                      : "code"
+                    : "preview"
+                )
+              }
+              size="sm">
+              Code
+            </Toggle>
+            <Toggle
+              pressed={viewMode === "preview" || viewMode === "both"}
+              onPressedChange={(pressed) =>
+                setViewMode(
+                  pressed ? (viewMode === "code" ? "both" : "preview") : "code"
+                )
+              }
+              size="sm">
+              Preview
+            </Toggle>
+          </div>
           <ThemeToggle />
         </div>
       </header>
@@ -264,31 +292,39 @@ export default function Home() {
         <ResizablePanel defaultSize={75} minSize={30} className="w-full">
           <ResizablePanelGroup direction="vertical" className="h-full">
             {/* Code Editor - Smaller on mobile */}
-            <ResizablePanel
-              defaultSize={50}
-              minSize={20}
-              className="min-h-[200px]">
-              <CodeEditorPanel
-                currentCode={currentCode}
-                isDarkMode={isDarkMode}
-                onEditorChange={handleEditorChange}
-              />
-            </ResizablePanel>
+            {(viewMode === "code" || viewMode === "both") && (
+              <ResizablePanel
+                defaultSize={viewMode === "both" ? 50 : 100}
+                minSize={20}
+                className="min-h-[200px]">
+                <CodeEditorPanel
+                  currentCode={currentCode}
+                  isDarkMode={isDarkMode}
+                  onEditorChange={handleEditorChange}
+                />
+              </ResizablePanel>
+            )}
 
-            <ResizableHandle withHandle className="hidden sm:block" />
+            {viewMode === "both" && (
+              <ResizableHandle withHandle className="hidden sm:block" />
+            )}
 
             {/* Component Preview - Larger on mobile */}
-            <ResizablePanel
-              defaultSize={50}
-              minSize={20}
-              className="min-h-[300px] sm:min-h-0">
-              <div className="flex flex-col h-full">
-                <div className="p-2 border-b font-medium text-sm">Preview</div>
-                <div className="flex-grow p-4 bg-muted/40 relative overflow-auto">
-                  <ComponentPreview key={previewKey} code={currentCode} />
+            {(viewMode === "preview" || viewMode === "both") && (
+              <ResizablePanel
+                defaultSize={viewMode === "both" ? 50 : 100}
+                minSize={20}
+                className="min-h-[300px] sm:min-h-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-2 border-b">
+                    <span className="font-medium text-sm">Preview</span>
+                  </div>
+                  <div className="flex-grow p-4 bg-slate-200 relative overflow-auto">
+                    <ComponentPreview key={previewKey} code={currentCode} />
+                  </div>
                 </div>
-              </div>
-            </ResizablePanel>
+              </ResizablePanel>
+            )}
           </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
