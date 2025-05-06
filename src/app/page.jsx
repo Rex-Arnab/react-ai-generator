@@ -18,12 +18,15 @@ import MobileControls from "@/components/MobileControls";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 
+let InitalCode = `
+// Your component code will appear here
+function Component(){
+  return "Let's Start Building"
+}`;
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [libraries, setLibraries] = useState("");
-  const [currentCode, setCurrentCode] = useState(
-    " // Your component code will appear here"
-  );
+  const [currentCode, setCurrentCode] = useState(InitalCode);
   const [savedComponents, setSavedComponents] = useState([]);
   const [selectedComponentId, setSelectedComponentId] = useState(null);
   const [componentName, setComponentName] = useState("");
