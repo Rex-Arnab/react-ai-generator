@@ -61,7 +61,6 @@ export async function POST(request) {
         const apiKey = formData.get('apiKey') || process.env.OPENROUTER_API_KEY
         const file = formData.get('file')
         const fullPrompt = createPrompt(prompt, libraries, existingCode);
-
         // Validate required fields
         if (!apiKey) {
             return NextResponse.json(
@@ -113,11 +112,16 @@ export async function POST(request) {
         })
 
         const data = await response.json()
-        if (!response.ok) throw new Error(data.error?.message || 'Failed to generate component')
+        if (!response.ok || data.error) {
+            console.log('Error: ', data.error)
+            throw new Error(data.error?.message || 'Failed to generate component')
+        }
 
         // Extract the generated code from the response
+        console.log("CONTENT:", data)
         const generatedCode = data.choices[0]?.message?.content
         if (!generatedCode) throw new Error('No code generated')
+        console.log("Code generated successfully")
 
         return NextResponse.json({ success: true, code: generatedCode })
     } catch (err) {

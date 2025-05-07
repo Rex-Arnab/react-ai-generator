@@ -31,12 +31,14 @@ export default function useComponentAPI() {
             formData.append("apiKey", apiKey);
             if (file) formData.append("file", file);
 
+
             const response = await fetch("/api/generate", {
                 method: "POST",
                 body: formData
             });
 
             const data = await response.json();
+
             if (!response.ok) throw new Error(data.error || `Request failed with status ${response.status}`);
             if (!data.success) throw new Error(data.error || "Failed to generate component");
 

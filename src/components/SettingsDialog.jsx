@@ -50,7 +50,6 @@ export function SettingsDialog({
   onApiKeyChange
 }) {
   const [open, setOpen] = useState(false);
-  const [useCustomKey, setUseCustomKey] = useState(false);
   const [models, setModels] = useState(DEFAULT_MODELS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -101,28 +100,14 @@ export function SettingsDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="model">AI Model</Label>
-              {!useCustomKey && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-muted-foreground text-sm">
-                      (Enable custom API key to select)
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Model selection requires a custom API key
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
+            <Label htmlFor="model">AI Model</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   role="combobox"
                   className="w-full justify-between"
-                  disabled={!useCustomKey}>
+                  autoComplete="off">
                   {model
                     ? models.find((m) => m.id === model)?.name || "Select model"
                     : "Select model"}
@@ -180,28 +165,18 @@ export function SettingsDialog({
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="use-custom-key">Use Custom API Key</Label>
-            <Switch
-              id="use-custom-key"
-              checked={useCustomKey}
-              onCheckedChange={setUseCustomKey}
+          <div>
+            <Label htmlFor="api-key">OpenRouter API Key (Optional)</Label>
+            <Input
+              id="api-key"
+              type="password"
+              placeholder="sk-..."
+              autoComplete="off"
+              value={apiKey}
+              onChange={(e) => onApiKeyChange(e.target.value)}
+              className="mt-1"
             />
           </div>
-          {useCustomKey && (
-            <div>
-              <Label htmlFor="api-key">OpenRouter API Key</Label>
-              <Input
-                id="api-key"
-                type="password"
-                placeholder="sk-..."
-                autoComplete="off"
-                value={apiKey}
-                onChange={(e) => onApiKeyChange(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

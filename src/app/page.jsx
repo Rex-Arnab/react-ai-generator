@@ -32,8 +32,23 @@ export default function Home() {
   const [componentName, setComponentName] = useState("");
   const [previewKey, setPreviewKey] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [aiModel, setAiModel] = useState("deepseek/deepseek-chat-v3-0324:free");
-  const [apiKey, setApiKey] = useState("");
+  const [aiModel, setAiModel] = useState(() => {
+    // Load from localStorage if available
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("selectedModel") ||
+        "deepseek/deepseek-chat-v3-0324:free"
+      );
+    }
+    return "deepseek/deepseek-chat-v3-0324:free";
+  });
+  const [apiKey, setApiKey] = useState(() => {
+    // Load from localStorage if available
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("apiKey") || "";
+    }
+    return "";
+  });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [viewMode, setViewMode] = useState("both"); // 'code', 'preview', or 'both'
@@ -90,6 +105,19 @@ export default function Home() {
     };
     loadComponents();
   }, []);
+
+  // Save model and API key to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("selectedModel", aiModel);
+    }
+  }, [aiModel]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("apiKey", apiKey);
+    }
+  }, [apiKey]);
 
   const handleGenerate = async (iteration = false) => {
     if ((!prompt && !iteration) || (iteration && !currentCode)) {
