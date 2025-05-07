@@ -119,8 +119,19 @@ export async function POST(request) {
 
         // Extract the generated code from the response
         console.log("CONTENT:", data)
-        const generatedCode = data.choices[0]?.message?.content
+        let generatedCode = data.choices[0]?.message?.content
         if (!generatedCode) throw new Error('No code generated')
+
+        // Remove single ```jsx ``` wrapper if present
+        const jsxWrapper = '```jsx'
+        if (generatedCode.startsWith(jsxWrapper) &&
+            generatedCode.indexOf(jsxWrapper, jsxWrapper.length) === -1) {
+            generatedCode = generatedCode
+                .replace(jsxWrapper, '')
+                .replace(/```$/, '')
+                .trim()
+        }
+
         console.log("Code generated successfully")
 
         return NextResponse.json({ success: true, code: generatedCode })
