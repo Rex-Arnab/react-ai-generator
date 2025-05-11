@@ -80,15 +80,19 @@ const createIframeContent = (theme) => `
             script.textContent = \`
                 try {
                     \${transformedCode}
-                    // Assign the specifically named component to the window
+                    // Support both direct Component definition and module exports
                     if (typeof Component !== 'undefined') {
-                       window.GeneratedComponent = Component;
+                        window.GeneratedComponent = Component;
+                    } else if (typeof exports !== 'undefined' && exports.Component) {
+                        window.GeneratedComponent = exports.Component;
+                    } else if (typeof module !== 'undefined' && module.exports && module.exports.Component) {
+                        window.GeneratedComponent = module.exports.Component;
                     } else {
-                       throw new Error('The function "Component" was not defined in the generated code.');
+                        throw new Error('Could not find Component - it must be either defined directly or exported from the module');
                     }
                 } catch (err) {
-                   // Make the error available to the outer catch block
-                   window.GeneratedComponentError = err;
+                    // Make the error available to the outer catch block
+                    window.GeneratedComponentError = err;
                 }
             \`;
 
@@ -104,7 +108,7 @@ const createIframeContent = (theme) => `
 
             // Check if the component was successfully attached
             if (!window.GeneratedComponent) {
-                throw new Error('Component function "Component" was not found on window object after executing generated code. Check AI output/prompt/naming.');
+                throw new Error('Component was not found - it must be either defined directly as "Component" or exported from the module');
             }
              console.log("Iframe: Component assigned to window.GeneratedComponent.");
 
