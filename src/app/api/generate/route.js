@@ -23,6 +23,7 @@ Generate a single, self-contained React functional component based on the user's
 - Do NOT include any explanations, markdown formatting (like \`\`\`jsx), introductory, or concluding remarks outside the code itself.
 - Ensure the component is fully functional, adheres to React best practices, is reusable, scalable, and visually outstanding.
 - The component should be ready to be rendered in a preview environment that includes React, ReactDOM, and TailwindCSS (via CDN).
+- Do Not include explanations or paragraphs, only give the final code block
 
 Additional Design Guidelines:
 - Think of the component as a piece of a larger design system: use variables, reusable classes, and patterns where possible.
@@ -115,7 +116,13 @@ export async function POST(request) {
             },
             body: JSON.stringify({
                 model,
-                messages
+                messages,
+                reasoning: {
+                    effort: "high",
+                    // max_tokens: 10000
+                },
+                max_tokens: 50000,
+                temperature: 1
             })
         })
 
