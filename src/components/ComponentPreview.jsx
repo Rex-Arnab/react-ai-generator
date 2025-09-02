@@ -234,7 +234,12 @@ export default function ComponentPreview({ code, showDeviceControls = true }) {
             sandbox="allow-scripts allow-same-origin"
             width="100%"
             height="100%"
-            style={{ border: "none", backgroundColor: "transparent" }}
+            style={{
+              border: "none",
+              backgroundColor: "transparent",
+              padding: "0",
+              margin: "0"
+            }}
           />
         </div>
       </div>

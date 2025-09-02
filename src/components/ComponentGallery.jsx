@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faUpload } from "@fortawesome/free-solid-svg-icons"; // faUpload for Load
+import {
+  faTrash,
+  faUpload,
+  faExternalLinkAlt
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function ComponentGallery({
   components = [],
@@ -79,6 +83,19 @@ export default function ComponentGallery({
                         disabled={isLoading}
                         title="Delete Component">
                         <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(`/preview/${comp._id}`, "_blank")
+                        }
+                        disabled={isLoading}
+                        title="Preview in new tab">
+                        <FontAwesomeIcon
+                          icon={faExternalLinkAlt}
+                          className="h-3 w-3"
+                        />
                       </Button>
                     </div>
                   </CardContent>

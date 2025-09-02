@@ -42,3 +42,8 @@ next-env.d.ts
 e2e.log
 yarn.lock
 package-lock.json
+build.log
+plan.md
+.clinerules
+e2e.log
+.vscode/**
