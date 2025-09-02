@@ -23,7 +23,7 @@ const createIframeContent = (theme) => `
     }
   </script>
   <style>
-    body { margin: 0; padding: 1rem; background-color: transparent; font-family: sans-serif; }
+    body { margin: 0; padding: 0; background-color: transparent; font-family: sans-serif; }
     #error-overlay { position: absolute; inset: 1rem; background: rgba(255,0,0,0.1); color: red; border: 1px solid red; padding: 1rem; font-family: monospace; white-space: pre-wrap; overflow: auto; z-index: 9999; font-size: 0.8rem; }
   </style>
 </head>
@@ -220,7 +220,7 @@ export default function ComponentPreview({ code, showDeviceControls = true }) {
       )}
       <div
         className={`flex-grow overflow-auto flex ${
-          showDeviceControls ? "justify-center p-4" : ""
+          showDeviceControls ? "justify-center" : ""
         }`}>
         <div
           className="border rounded-lg overflow-hidden shadow-lg"
